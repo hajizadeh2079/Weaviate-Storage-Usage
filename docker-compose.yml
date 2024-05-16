@@ -1,0 +1,39 @@
+services:
+  weaviate:
+    command:
+    - --host
+    - 0.0.0.0
+    - --port
+    - '8080'
+    - --scheme
+    - http
+    image: cr.weaviate.io/semitechnologies/weaviate:1.24.11
+    ports:
+    - 8080:8080
+    - 50051:50051
+    volumes:
+    - ./weaviate-data:/var/lib/weaviate
+    restart: on-failure:0
+    environment:
+      QUERY_DEFAULTS_LIMIT: 25
+      AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: 'true'
+      PERSISTENCE_DATA_PATH: '/var/lib/weaviate'
+      DEFAULT_VECTORIZER_MODULE: 'none'
+      ENABLE_MODULES: 'text2vec-cohere,text2vec-huggingface,text2vec-palm,text2vec-openai,generative-openai,generative-cohere,generative-palm,ref2vec-centroid,reranker-cohere,qna-openai'
+      CLUSTER_HOSTNAME: 'node1'
+  node-exporter:
+    image: prom/node-exporter:v1.8.0
+    ports:
+      - "9100:9100"
+    volumes:
+      - /:/hostfs:ro
+      - ./node-exporter-data:/var/lib/node_exporter
+    command:
+      - "--path.rootfs=/hostfs"
+      - "--collector.textfile.directory=/var/lib/node_exporter"
+  prometheus:
+    image: prom/prometheus:v2.52.0
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
